@@ -127,7 +127,6 @@ export let getEntries = (): GeneralThunkType<GeneralActionsType, Promise<ReturnT
 		let entries: IEntry[] | null
 		let error: string | null
 		dispatch(actions.togglePendingGetEntries())
-		await pendiner()
 		try {
 			entries = await entriesApi.getEntries()
 			error = null
@@ -141,7 +140,6 @@ export let getEntries = (): GeneralThunkType<GeneralActionsType, Promise<ReturnT
 		return tmp
 	}
 }
-let pendiner = async () => new Promise(res => setTimeout(() => res(1), 500))
 
 export let createEntry = (text: string, sign: string, tz: string): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setEntry>>> => {
 	return async (dispatch, getState) => {
@@ -152,7 +150,6 @@ export let createEntry = (text: string, sign: string, tz: string): GeneralThunkT
 
 		try {
 			let timestamp = await getSpecificTimezone(tz.toLowerCase())
-			await pendiner()
 
 			if (!entries?.length) {
 				entries = await entriesApi.getEntries()
@@ -165,7 +162,7 @@ export let createEntry = (text: string, sign: string, tz: string): GeneralThunkT
 				entryCounter: `Запись номер ${entries.length + 1}`
 			}
 
-			//сохраняем новую запись в localstorage
+			//save the new entry in localstorage
 			await entriesApi.setEntries<IEntry>([entry, ...entries])
 			error = null
 		} catch (e) {

@@ -1,9 +1,8 @@
-import { Box, LinearProgress, MenuItem, NativeSelect, Pagination, Select, SelectChangeEvent, Typography } from "@mui/material";
-import React, { ChangeEvent, FC, memo, useEffect, useState } from "react";
+import { Box, LinearProgress, MenuItem, Pagination, Select, Typography } from "@mui/material";
+import React, { FC, memo, useEffect, useState } from "react";
 import { getEntries, IEntry } from "../app/reducers";
-import { store, useAppDispatch, useTypesSelector } from "../app/redux-store";
+import { useAppDispatch, useTypesSelector } from "../app/redux-store";
 import { entriesCashedDataApi } from "../packages/storage";
-import entries from "../packages/storage/adapters/entries";
 
 let testEntriesCashedDataApi: {
 	setEntriesCashedData: (data: { count: number }) => void
@@ -43,7 +42,7 @@ export let Entries: FC = () => {
 		{!pendingGetEntries && entries?.slice(range, range + entriesPerView)
 			?.map((item) => <Entry key={item.date} entry={item} />)}
 
-		{entries?.length && !pendingGetEntries && <Box sx={{
+		{!!entries?.length && !pendingGetEntries && <Box sx={{
 			justifySelf: "center",
 			alignSelf: "start",
 			justifyItems: "center",
@@ -69,8 +68,7 @@ export let Entries: FC = () => {
 			}} value={entriesPerView}>
 				{[6, 12, 18, 24, 30].map(item => <MenuItem key={item} value={item}>{item}</MenuItem>)}
 			</Select>
-		</Box>
-		}
+		</Box>}
 	</Box>
 }
 

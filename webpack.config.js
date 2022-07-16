@@ -3,10 +3,8 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 let mode = 'development';
-//let target = 'web';
 if (process.env.NODE_ENV === 'production') {
   mode = 'production';
-  //target = 'browserslist';
 }
 
 const plugins = [
@@ -20,7 +18,6 @@ const plugins = [
 
 module.exports = {
   mode,
-  //target,
   plugins,
   devtool: 'source-map',
   entry: './src/index.tsx',
@@ -32,14 +29,13 @@ module.exports = {
   },
 
   output: {
-    publicPath: "/",
+    // publicPath: "/",
     path: path.resolve(__dirname, 'dist'),
     assetModuleFilename: 'assets/[hash][ext][query]',
     filename: 'build/[name].js',
     clean: true,
   },
   resolve: {
-    // Add `.ts` and `.tsx` as a resolvable extension.
     extensions: [".ts", ".tsx", ".js"]
   },
   module: {
@@ -66,16 +62,6 @@ module.exports = {
         test: /\.(woff2?|eot|ttf|otf)$/i,
         type: 'asset/resource',
       },
-      // {
-      //   test: /\.js$/,
-      //   exclude: /node_modules/,
-      //   use: {
-      //     loader: 'babel-loader',
-      //     options: {
-      //       cacheDirectory: true,
-      //     },
-      //   },
-      // },
     ],
   },
   optimization: {
@@ -85,9 +71,9 @@ module.exports = {
         vendors: false,
 
         vendor: {
-          chunks: 'all', // both : consider sync + async chunks for evaluation
-          name: 'vendor', // имя чанк-файла
-          test: /node_modules/, // test regular expression
+          chunks: 'all',
+          name: 'vendor',
+          test: /node_modules/,
         }
       }
     }

@@ -1,6 +1,6 @@
-import { AppBar, Box, Button, Container, IconButton, Tab, Tabs, Toolbar, Typography } from "@mui/material";
+import { AppBar, Box, Container, Tab, Tabs, Typography } from "@mui/material";
 import React, { FC } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Entries } from "./Entries";
 import { Form } from "./Form";
 
@@ -65,7 +65,7 @@ export const App: FC = () => {
 			}}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}>
 					<Tabs
-						value={location.pathname.slice(1)}
+						value={location.pathname.slice(1) || "createEntry"}
 						onChange={handleChange}
 						aria-label="basic tabs example"
 					>
@@ -77,7 +77,7 @@ export const App: FC = () => {
 				<Routes>
 					<Route path="createEntry" element={<TabPanel index={0} value={0}><Form /></TabPanel>} />
 					<Route path="entries" element={<TabPanel index={1} value={1}><Entries /></TabPanel>} />
-					<Route index element={<Navigate replace to={"/createEntry"} />} />
+					<Route index element={<Navigate to={"createEntry"} />} />
 				</Routes>
 			</Container>
 		</Box>

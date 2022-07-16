@@ -1,6 +1,6 @@
 # Getting Started
-
-Then install the dependencies
+Clone this repository
+Then Install the dependencies
 
 ### `npm install`
 
@@ -14,11 +14,11 @@ Runs the app in the development mode.
 
 ### `npm run build`
 
-Builds the app in the development mode to the `build` folder.
+Builds the app in the development mode to the `dist` folder.
 
 ### `npm run build-prod`
 
-Builds the app for production to the `build` folder.
+Builds the app for production to the `dist` folder.
 
 ### `npm run clean`
 
