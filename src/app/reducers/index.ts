@@ -5,22 +5,23 @@ import { ActionType, AppDispatch, GeneralThunkType, RootState } from "../redux-s
 import { getSpecificTimezone, ISpecificTimezone } from '../../packages/api/rest/timezone';
 
 
-interface IEntries {
+interface IEntriesApi {
 	setEntries: (entries: IEntry[]) => Promise<void>
 	getEntries: () => Promise<IEntry[]>
 }
 
-let rootEntries: IEntries = entriesApi
+let rootEntries: IEntriesApi = entriesApi
 
 export interface IEntry {
-	text: string,
-	sign: string,
-	tz: string
-	date: ISpecificTimezone
+	text: string
+	sign: string
+	date: ISpecificTimezone["datetime"]
+	entryCounter: string
 }
 
 interface IInitialState {
 	entries: IEntry[] | null
+	pendingGetEntries: boolean
 	errorGetEntries: null | string
 	errorSaveEntry: null | string
 	pendingSaveEntry: boolean
@@ -30,7 +31,8 @@ interface IInitialState {
 }
 
 let initialState: IInitialState = {
-	entries: [],
+	entries: null,
+	pendingGetEntries: false,
 	errorGetEntries: null,
 	errorSaveEntry: null,
 	pendingSaveEntry: false,
@@ -87,6 +89,12 @@ export default (state = initialState, action: GeneralActionsType): IInitialState
 				...state,
 				errorGetTz: action.payload.error
 			}
+		case "APP/togglePendingGetEntries":
+			return {
+				...state,
+				pendingGetEntries: !state.pendingGetEntries
+			}
+
 	}
 
 	return state
@@ -106,7 +114,10 @@ export let actions = {
 	togglePendingGetTz: () =>
 		({ type: "APP/togglePendingGetTz", payload: {} } as const),
 	setTimezones: (error: string | null, tz: string[] | null) =>
-		({ type: "APP/setTimezones", payload: { error, tz } } as const)
+		({ type: "APP/setTimezones", payload: { error, tz } } as const),
+	togglePendingGetEntries: () =>
+		({ type: "APP/togglePendingGetEntries", payload: {} } as const),
+
 }
 
 
@@ -115,38 +126,46 @@ export let getEntries = (): GeneralThunkType<GeneralActionsType, Promise<ReturnT
 	return async (dispatch) => {
 		let entries: IEntry[] | null
 		let error: string | null
+		dispatch(actions.togglePendingGetEntries())
+		await pendiner()
 		try {
-			entries = await entriesApi.getEntries<IEntry>()
+			entries = await entriesApi.getEntries()
 			error = null
 		} catch (e) {
 			error = "Произошла ошибка при получении записей"
 			entries = null
 		}
 
-		return dispatch(actions.setEntries(error, entries))
+		let tmp = dispatch(actions.setEntries(error, entries))
+		dispatch(actions.togglePendingGetEntries())
+		return tmp
 	}
 }
+let pendiner = async () => new Promise(res => setTimeout(() => res(1), 500))
 
-
-export let saveEntry = (text: string, sign: string, tz: string): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setEntry>>> => {
+export let createEntry = (text: string, sign: string, tz: string): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setEntry>>> => {
 	return async (dispatch, getState) => {
 		let entries = getState().entries
 		dispatch(actions.togglePendingSaveEntry())
 		let error: string | null
 		let entry: IEntry | null
+
 		try {
 			let timestamp = await getSpecificTimezone(tz.toLowerCase())
-			entry = {
-				date: timestamp,
-				sign,
-				text,
-				tz
-			}
+			await pendiner()
 
-			//сохраняем новыю запись в localstorage
 			if (!entries?.length) {
 				entries = await entriesApi.getEntries()
 			}
+
+			entry = {
+				date: timestamp.datetime,
+				sign,
+				text,
+				entryCounter: `Запись номер ${entries.length + 1}`
+			}
+
+			//сохраняем новую запись в localstorage
 			await entriesApi.setEntries<IEntry>([entry, ...entries])
 			error = null
 		} catch (e) {

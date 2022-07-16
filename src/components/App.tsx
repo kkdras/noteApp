@@ -1,6 +1,7 @@
 import { AppBar, Box, Button, Container, IconButton, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import React, { FC } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Entries } from "./Entries";
 import { Form } from "./Form";
 
 
@@ -36,12 +37,11 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export const App: FC = () => {
-	const [value, setValue] = React.useState(0);
+	let location = useLocation()
 	let navigate = useNavigate()
-	const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-		setValue(newValue);
-		if (newValue === 0) navigate("createEntry")
-		else if (newValue === 1) navigate("entries")
+	const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+
+		navigate(newValue)
 	};
 
 
@@ -65,19 +65,19 @@ export const App: FC = () => {
 			}}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}>
 					<Tabs
-						value={value}
+						value={location.pathname.slice(1)}
 						onChange={handleChange}
 						aria-label="basic tabs example"
 					>
-						<Tab label="Создать запись" {...a11yProps(0)} />
-						<Tab label="Записи" {...a11yProps(1)} />
+						<Tab value="createEntry" label="Создать запись" {...a11yProps(0)} />
+						<Tab value="entries" label="Записи" {...a11yProps(1)} />
 					</Tabs>
 				</Box>
 
 				<Routes>
 					<Route path="createEntry" element={<TabPanel index={0} value={0}><Form /></TabPanel>} />
-					<Route path="entries" element={<TabPanel index={1} value={1}><div>Tab 2</div></TabPanel>} />
-					<Route index element={<Navigate to={"createEntry"} />} />
+					<Route path="entries" element={<TabPanel index={1} value={1}><Entries /></TabPanel>} />
+					<Route index element={<Navigate replace to={"/createEntry"} />} />
 				</Routes>
 			</Container>
 		</Box>

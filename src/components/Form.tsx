@@ -1,14 +1,14 @@
-import { Alert, Box, Button, CircularProgress, FormControl, InputLabel, LinearProgress, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
+import { Alert, Box, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
 import React, { FC, useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
-import { useDispatch } from "react-redux";
-import { actions, getEntries, getTimezones, saveEntry } from "../app/reducers";
+import { actions, createEntry, getTimezones } from "../app/reducers";
 import { useAppDispatch, useTypesSelector } from "../app/redux-store";
 import { formApi } from "../packages/storage/index"
 import SendIcon from '@mui/icons-material/Send';
 import { ManageAlerts } from "./ManageAlerts";
+import LoadingButton from "@mui/lab/LoadingButton";
 
-let testForm: {
+let testFormApi: {
 	getFormData: () => ICacheFormData;
 	setFormData: (formData: ICacheFormData) => void;
 } = formApi
@@ -34,7 +34,7 @@ export let Form: FC = () => {
 	let onSubmit = async (data: formData) => {
 		let CacheFormData: ICacheFormData = { selectTz: data.selectTz, sign: data.sign }
 		formApi.setFormData(CacheFormData)
-		let action = await dispatch(saveEntry(data.text, data.sign, data.selectTz))
+		let action = await dispatch(createEntry(data.text, data.sign, data.selectTz))
 		if (!action.payload.error) {
 			reset()
 			setSuccessAlert("Новая запись успешно сохранена")
@@ -44,6 +44,7 @@ export let Form: FC = () => {
 
 	let timezones = useTypesSelector(state => state.timeZones)
 	let pendingGetTz = useTypesSelector(state => state.pendingGetTz)
+	let pendingSaveEntry = useTypesSelector(state => state.pendingSaveEntry)
 	let errorSave = useTypesSelector(state => state.errorSaveEntry)
 	let errorGetTz = useTypesSelector(state => state.errorGetTz)
 
@@ -92,12 +93,7 @@ export let Form: FC = () => {
 		component="form" sx={{
 			position: "relative",
 			display: "flex",
-			flexWrap: "wrap",
-			padding: 1,
-			...(!timezones ? {
-				alignItems: "center",
-				justifyContent: "center"
-			} : {})
+			flexWrap: "wrap"
 		}}>
 
 		<ManageAlerts>
@@ -120,23 +116,8 @@ export let Form: FC = () => {
 			</Alert>}
 		</ManageAlerts>
 
-		{(!timezones || pendingGetTz) && <Box sx={{
-			position: "absolute",
-			top: 0,
-			left: 0,
-			width: "100%",
-			height: "100%",
-			backgroundColor: "#6060609e",
-			display: "flex",
-			alignItems: "center",
-			justifyContent: "center",
-			zIndex: 10,
-			borderRadius: 1,
-		}}>
-			<CircularProgress />
-		</Box>}
-
 		<TextField
+			disabled={pendingGetTz || pendingSaveEntry}
 			sx={{ flex: "1 1 auto", mb: 2 }}
 			label="Запись"
 			multiline
@@ -146,12 +127,20 @@ export let Form: FC = () => {
 		/>
 
 		<TextField
+			disabled={pendingGetTz || pendingSaveEntry}
 			sx={{
 				flex: {
-					xs: "0 1 70%"
+					xs: "1 1 auto",
+					md: "0 1 70%"
 				},
 				"> div": {
-					marginRight: 1
+					marginRight: {
+						md: 1
+					}
+				},
+				mb: {
+					xs: 2,
+					md: 0
 				}
 			}}
 			{...register("sign")}
@@ -159,8 +148,10 @@ export let Form: FC = () => {
 		/>
 
 		<Box sx={{
+
 			flex: {
-				xs: "0 1 30%"
+				xs: "1 1 100%",
+				md: "0 1 30%"
 			}
 		}}>
 			<Controller
@@ -173,6 +164,7 @@ export let Form: FC = () => {
 							labelId="demo-simple-select-label"
 							id="demo-simple-select"
 							label="Точное время по"
+							disabled={pendingGetTz || pendingSaveEntry}
 							onChange={(e) => onChange(e.target.value)}
 							{...rest}
 						>
@@ -183,11 +175,14 @@ export let Form: FC = () => {
 			/>
 		</Box>
 
-		<Button
+		<LoadingButton
 			sx={{ ml: "auto", mt: 1 }}
 			variant="contained"
+			loadingPosition="end"
+			loading={(!timezones || pendingGetTz || pendingSaveEntry)}
 			endIcon={<SendIcon />}
 			type="submit"
-		>Создать</Button>
+		>Создать</LoadingButton>
+
 	</Box>
 }

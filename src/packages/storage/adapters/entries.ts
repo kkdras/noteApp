@@ -1,7 +1,7 @@
 import { IEntry } from "../../../app/reducers";
 import storage from "../storage";
 
-async function getEntries<T>(): Promise<IEntry[]> {
+async function getEntries(): Promise<IEntry[]> {
 	let tmp: null | IEntry[] = JSON.parse(storage.getItem("entries") || "null")
 	let returnValue: IEntry[] = tmp || []
 
