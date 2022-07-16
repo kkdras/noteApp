@@ -1,6 +1,6 @@
-interface IStorage {
+export interface IStorage {
 	setItem(name: string, value: string): void
-	getItem(name: string): string | null
+	getItem: (name: string) => string | null
 }
 
 let storage: IStorage = localStorage
@@ -18,6 +18,7 @@ let getItem = (name: string): string | null => {
 		throw "Storage must implement setItem method"
 	}
 	return storage.getItem(name)
+
 }
 
 export default { setItem, getItem }

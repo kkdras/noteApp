@@ -1,10 +1,85 @@
-import React from "react";
+import { AppBar, Box, Button, Container, IconButton, Tab, Tabs, Toolbar, Typography } from "@mui/material";
+import React, { FC } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Form } from "./Form";
 
-export const App = () => {
-	debugger
+
+function a11yProps(index: number) {
+	return {
+		id: `simple-tab-${index}`,
+		"aria-controls": `simple-tabpanel-${index}`
+	};
+}
+
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+	const { children, value, index, ...other } = props;
+
 	return (
-		<div>
-			Hello http dev
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`simple-tabpanel-${index}`}
+			aria-labelledby={`simple-tab-${index}`}
+			{...other}
+		>
+			{value === index && (
+				children
+			)}
 		</div>
+	);
+}
+
+export const App: FC = () => {
+	const [value, setValue] = React.useState(0);
+	let navigate = useNavigate()
+	const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+		setValue(newValue);
+		if (newValue === 0) navigate("createEntry")
+		else if (newValue === 1) navigate("entries")
+	};
+
+
+	return (
+		<Box sx={{ minWidth: "100%" }}>
+			<AppBar position="static">
+				<Container
+					sx={{
+						display: "flex",
+						alignItems: "center",
+						minHeight: "64px",
+					}}
+					maxWidth="md"
+				>
+					<Typography variant="h5">Note manager</Typography>
+				</Container>
+			</AppBar>
+			<Container maxWidth="md" sx={{
+				pt: 2,
+				pb: 2
+			}}>
+				<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 1 }}>
+					<Tabs
+						value={value}
+						onChange={handleChange}
+						aria-label="basic tabs example"
+					>
+						<Tab label="Создать запись" {...a11yProps(0)} />
+						<Tab label="Записи" {...a11yProps(1)} />
+					</Tabs>
+				</Box>
+
+				<Routes>
+					<Route path="createEntry" element={<TabPanel index={0} value={0}><Form /></TabPanel>} />
+					<Route path="entries" element={<TabPanel index={1} value={1}><div>Tab 2</div></TabPanel>} />
+					<Route index element={<Navigate to={"createEntry"} />} />
+				</Routes>
+			</Container>
+		</Box>
 	);
 };

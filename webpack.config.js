@@ -28,15 +28,20 @@ module.exports = {
     hot: true,
     port: 3000,
     open: true,
+    historyApiFallback: true
   },
 
   output: {
+    publicPath: "/",
     path: path.resolve(__dirname, 'dist'),
     assetModuleFilename: 'assets/[hash][ext][query]',
     filename: 'build/[name].js',
     clean: true,
   },
-
+  resolve: {
+    // Add `.ts` and `.tsx` as a resolvable extension.
+    extensions: [".ts", ".tsx", ".js"]
+  },
   module: {
     rules: [
       { test: /\.(html)$/, use: ['html-loader'] },

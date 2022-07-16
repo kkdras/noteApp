@@ -1,8 +1,11 @@
+import { IEntry } from "../../../app/reducers";
 import storage from "../storage";
 
-async function getEntries<T>(): Promise<T[] | null> {
-	let tmp = storage.getItem("entries")
-	return (tmp ? JSON.parse(tmp) : null)
+async function getEntries<T>(): Promise<IEntry[]> {
+	let tmp: null | IEntry[] = JSON.parse(storage.getItem("entries") || "null")
+	let returnValue: IEntry[] = tmp || []
+
+	return returnValue
 }
 
 async function setEntries<T>(entries: T[]): Promise<void> {

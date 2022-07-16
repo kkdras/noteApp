@@ -2,7 +2,7 @@ import axios from "axios"
 import config from "./config"
 
 let instance = axios.create({
-	baseURL: config.url
+	baseURL: config.url,
 })
 
 export default <T>({
@@ -10,12 +10,14 @@ export default <T>({
 	method = "get",
 	params = {},
 	data = {},
-	headers = {}
+	headers = {
+		"Content-Type": "text/plain"
+	}
 }) => {
 	return instance.request<T>({
 		url,
-		method,
 		headers,
+		method,
 		params,
 		data
 	}).then(res => res.data)

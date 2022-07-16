@@ -6,13 +6,13 @@ import { getSpecificTimezone, ISpecificTimezone } from '../../packages/api/rest/
 
 
 interface IEntries {
-	setEntries: (entries: string[]) => Promise<void>
-	getEntries: () => Promise<string[] | null>
+	setEntries: (entries: IEntry[]) => Promise<void>
+	getEntries: () => Promise<IEntry[]>
 }
 
 let rootEntries: IEntries = entriesApi
 
-interface IEntry {
+export interface IEntry {
 	text: string,
 	sign: string,
 	tz: string
@@ -55,40 +55,72 @@ export default (state = initialState, action: GeneralActionsType): IInitialState
 				pendingSaveEntry: !state.pendingSaveEntry
 			}
 		case "APP/setEntry":
+			if (action.payload.entry) {
+				return {
+					...state,
+					errorSaveEntry: action.payload.error,
+					entries: [action.payload.entry, ...(state.entries || [])]
+				}
+			}
 			return {
 				...state,
-				errorSaveEntry: action.payload.error,
-				entries: [action.payload.entry, ...state.entries]
+				errorSaveEntry: action.payload.error
 			}
 		case "APP/togglePendingGetTz":
 			return {
 				...state,
 				pendingGetTz: !state.pendingGetTz
 			}
+		case "APP/setSaveEntryErrorStatus":
+			return {
+				...state,
+				errorSaveEntry: action.payload.error
+			}
+		case "APP/setTimezones":
+			return {
+				...state,
+				timeZones: action.payload.tz,
+				errorGetTz: action.payload.error
+			}
+		case "APP/setGetTzError":
+			return {
+				...state,
+				errorGetTz: action.payload.error
+			}
 	}
 
 	return state
 }
 
-let actions = {
+export let actions = {
 	setEntries: (error: string | null, entries: IEntry[] | null) =>
 		({ type: "APP/setEntries", payload: { entries, error } } as const),
-	togglePendingSaveEntry: () => ({ type: "APP/togglePendingSaveEntry", payload: {} } as const),
-	setEntry: (error: string | null, entry: IEntry | null) => ({ type: "APP/setEntry", payload: { error, entry } } as const),
-	togglePendingGetTz: () => ({ type: "APP/togglePendingGetTz", payload: {} } as const),
-	setTimezones: (error: string | null, tz: string[] | null) => ({ type: "APP/setTimezones", payload: { error, tz } } as const)
+	setSaveEntryError: (error: string | null) =>
+		({ type: "APP/setSaveEntryErrorStatus", payload: { error } } as const),
+	setGetTzError: (error: string | null) =>
+		({ type: "APP/setGetTzError", payload: { error } } as const),
+	togglePendingSaveEntry: () =>
+		({ type: "APP/togglePendingSaveEntry", payload: {} } as const),
+	setEntry: (error: string | null, entry: IEntry | null) =>
+		({ type: "APP/setEntry", payload: { error, entry } } as const),
+	togglePendingGetTz: () =>
+		({ type: "APP/togglePendingGetTz", payload: {} } as const),
+	setTimezones: (error: string | null, tz: string[] | null) =>
+		({ type: "APP/setTimezones", payload: { error, tz } } as const)
 }
 
 
 
-let getEntries = (): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setEntries>>> => {
-	return async (dispatch: AppDispatch) => {
+export let getEntries = (): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setEntries>>> => {
+	return async (dispatch) => {
 		let entries: IEntry[] | null
 		let error: string | null
 		try {
 			entries = await entriesApi.getEntries<IEntry>()
+			error = null
 		} catch (e) {
 			error = "Произошла ошибка при получении записей"
+			entries = null
 		}
 
 		return dispatch(actions.setEntries(error, entries))
@@ -96,11 +128,11 @@ let getEntries = (): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typ
 }
 
 
-let saveEntry = (text: string, sign: string, tz: string): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setEntry>>> => {
-	return async (dispatch: AppDispatch, getState) => {
+export let saveEntry = (text: string, sign: string, tz: string): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setEntry>>> => {
+	return async (dispatch, getState) => {
 		let entries = getState().entries
-		actions.togglePendingSaveEntry()
-		let error: string | null = null
+		dispatch(actions.togglePendingSaveEntry())
+		let error: string | null
 		let entry: IEntry | null
 		try {
 			let timestamp = await getSpecificTimezone(tz.toLowerCase())
@@ -112,30 +144,36 @@ let saveEntry = (text: string, sign: string, tz: string): GeneralThunkType<Gener
 			}
 
 			//сохраняем новыю запись в localstorage
+			if (!entries?.length) {
+				entries = await entriesApi.getEntries()
+			}
 			await entriesApi.setEntries<IEntry>([entry, ...entries])
+			error = null
 		} catch (e) {
 			error = "Произошла ошибка при сохранении новой записи"
 			entry = null
 		}
-		actions.togglePendingSaveEntry()
+		dispatch(actions.togglePendingSaveEntry())
 		let tmp = dispatch(actions.setEntry(error, entry))
 		return tmp
 	}
 }
 
-let getTimezones = (): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setTimezones>>> => {
-	return async (dispatch: AppDispatch) => {
+export let getTimezones = (): GeneralThunkType<GeneralActionsType, Promise<ReturnType<typeof actions.setTimezones>>> => {
+	return async (dispatch) => {
 		let timezones: string[] | null = null
 		let error: string | null = null
-		actions.togglePendingGetTz()
+		dispatch(actions.togglePendingGetTz())
+
 		try {
 			timezones = await getTimeZones()
 		} catch (e) {
+			timezones = null
 			error = "Произошла ошибка при получении временных зон"
 		}
 		let tmp = dispatch(actions.setTimezones(error, timezones))
 
-		actions.togglePendingGetTz()
+		dispatch(actions.togglePendingGetTz())
 		return tmp
 	}
 }
