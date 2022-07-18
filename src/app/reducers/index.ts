@@ -1,7 +1,6 @@
 import { getTimeZones } from './../../packages/api/rest/timezone';
-import { string } from 'prop-types';
 import { entriesApi } from './../../packages/storage/index';
-import { ActionType, AppDispatch, GeneralThunkType, RootState } from "../redux-store"
+import { ActionType, GeneralThunkType } from "../redux-store"
 import { getSpecificTimezone, ISpecificTimezone } from '../../packages/api/rest/timezone';
 
 
@@ -57,16 +56,10 @@ export default (state = initialState, action: GeneralActionsType): IInitialState
 				pendingSaveEntry: !state.pendingSaveEntry
 			}
 		case "APP/setEntry":
-			if (action.payload.entry) {
-				return {
-					...state,
-					errorSaveEntry: action.payload.error,
-					entries: [action.payload.entry, ...(state.entries || [])]
-				}
-			}
 			return {
 				...state,
-				errorSaveEntry: action.payload.error
+				errorSaveEntry: action.payload.error,
+				entries: action.payload.entry ? [action.payload.entry, ...(state.entries || [])] : state.entries,
 			}
 		case "APP/togglePendingGetTz":
 			return {
@@ -94,9 +87,7 @@ export default (state = initialState, action: GeneralActionsType): IInitialState
 				...state,
 				pendingGetEntries: !state.pendingGetEntries
 			}
-
 	}
-
 	return state
 }
 

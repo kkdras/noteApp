@@ -27,7 +27,7 @@ interface formData {
 
 
 export let Form: FC = () => {
-	let { register, reset, handleSubmit, control } = useForm<formData>({ defaultValues: formApi.getFormData() })
+	let { register, reset, handleSubmit, control, formState: { errors } } = useForm<formData>({ defaultValues: formApi.getFormData(), mode: "onChange" })
 	let dispatch = useAppDispatch()
 	let [successAlert, setSuccessAlert] = useState<null | string>(null)
 
@@ -36,11 +36,14 @@ export let Form: FC = () => {
 		formApi.setFormData(CacheFormData)
 		let action = await dispatch(createEntry(data.text, data.sign, data.selectTz))
 		if (!action.payload.error) {
-			reset()
+			let resetData: formData = {
+				...formApi.getFormData(),
+				text: ""
+			}
+			reset(resetData)
 			setSuccessAlert("Новая запись успешно сохранена")
 		}
 	}
-
 
 	let timezones = useTypesSelector(state => state.timeZones)
 	let pendingGetTz = useTypesSelector(state => state.pendingGetTz)
@@ -59,10 +62,6 @@ export let Form: FC = () => {
 			if (successAlert) cleanErr()
 		}
 	}, [successAlert])
-
-	useEffect(() => {
-		dispatch(getTimezones())
-	}, [])
 
 	useEffect(() => {
 		let id: NodeJS.Timeout
@@ -87,6 +86,10 @@ export let Form: FC = () => {
 			if (errorGetTz) cleanErr()
 		}
 	}, [errorGetTz])
+
+	useEffect(() => {
+		dispatch(getTimezones())
+	}, [])
 
 	return <Box
 		onSubmit={handleSubmit(onSubmit)}
@@ -143,8 +146,10 @@ export let Form: FC = () => {
 					md: 0
 				}
 			}}
-			{...register("sign")}
-			label="Required"
+			{...register("sign", { maxLength: { value: 100, message: "Слишком длинный текст" } })}
+			error={!!errors?.sign}
+			helperText={errors?.sign?.message || ""}
+			label="Подпись"
 		/>
 
 		<Box sx={{
@@ -179,6 +184,7 @@ export let Form: FC = () => {
 			sx={{ ml: "auto", mt: 1 }}
 			variant="contained"
 			loadingPosition="end"
+			disabled={!!Object.entries(errors).length}
 			loading={(!timezones || pendingGetTz || pendingSaveEntry)}
 			endIcon={<SendIcon />}
 			type="submit"
